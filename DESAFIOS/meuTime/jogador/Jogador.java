@@ -11,7 +11,7 @@ public class Jogador {
     public LocalDate dataNascimento;
     public Integer nivelHabilidade;
     public BigDecimal salario;
-    public boolean capitao;
+    public Boolean capitao;
 
     public Jogador(Long id, Long idTime, String nome, LocalDate dataNascimento, Integer nivelHabilidade, BigDecimal salario) {
         this.id = id;

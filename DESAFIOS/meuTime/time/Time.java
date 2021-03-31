@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public class Time {
 
-    public long id;
+    public Long id;
     public String nome;
     public LocalDate dataCriacao;
     public String corUniformePrincipal;
