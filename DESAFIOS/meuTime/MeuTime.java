@@ -1,214 +1,114 @@
 package meuTime;
 
-import meuTime.desafio.exceptions.CapitaoNaoInformadoException;
-import meuTime.desafio.exceptions.JogadorNaoEncontradoException;
+
 import meuTime.desafio.exceptions.TimeNaoEncontradoException;
-import meuTime.jogador.Jogador;
-import meuTime.time.Time;
-import meuTime.desafio.exceptions.IdentificadorUtilizadoException;
+import meuTime.jogadores.Jogador;
+import meuTime.jogadores.ListaJogadores;
+import meuTime.times.ListaTimes;
+import meuTime.times.Time;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public class MeuTime {
 
-    public static List<Time> arrayTimes = new ArrayList<>();
-    public static List<Jogador> arrayJogadores = new ArrayList<>();
+public class MeuTime implements MeuTimeInterface {
+
+    ListaTimes times = new ListaTimes();
+    ListaJogadores jogadores = new ListaJogadores();
 
     public void incluirTime(Long id, String nome, LocalDate dataCriacao, String corUniformePrincipal, String corUniformeSecundario) {
-        if (arrayTimes.stream().noneMatch( time -> time.id.equals(id) )) {
-            Time novoTime = new Time(id, nome, dataCriacao, corUniformePrincipal, corUniformeSecundario);
-            arrayTimes.add(novoTime);
-        } else {
-            throw new IdentificadorUtilizadoException();
-        }
+        Time time = new Time(id, nome, dataCriacao, corUniformePrincipal, corUniformeSecundario);
+        times.addTime(time);
     }
 
     public void incluirJogador(Long id, Long idTime, String nome, LocalDate dataNascimento, Integer nivelHabilidade, BigDecimal salario) {
-        if (arrayJogadores.stream().anyMatch(jogador -> jogador.id.equals(id))) {
-            throw new IdentificadorUtilizadoException();
-        } else if (arrayTimes.stream().noneMatch(time -> time.id.equals(idTime))) {
-            throw new TimeNaoEncontradoException();
-        } else {
-            Jogador jogador = new Jogador(id, idTime, nome, dataNascimento, nivelHabilidade, salario);
-            arrayJogadores.add(jogador);
-        }
+        if (!times.verificaTimeExiste(idTime)) throw new TimeNaoEncontradoException();
+        Jogador jogador = new Jogador(id, idTime, nome, dataNascimento, nivelHabilidade, salario);
+        jogadores.addJogador(jogador);
     }
 
     public void definirCapitao(Long idJogador) {
-        if (arrayJogadores.stream().anyMatch(jogador -> jogador.capitao)) {
-            arrayJogadores.forEach(jogador -> jogador.capitao = false);
-        }
-        if (arrayJogadores.stream().anyMatch(jogador -> jogador.id.equals(idJogador))) {
-            arrayJogadores.stream().filter(jogador -> jogador.id.equals(idJogador))
-                    .forEach(expectJogador -> expectJogador.capitao = true);
-        } else {
-            throw new JogadorNaoEncontradoException();
-        }
+        jogadores.escolherCapitao(idJogador);
     }
 
     public Long buscarCapitaoDoTime(Long idTime) {
-        long idCapitao = 0;
-        if (arrayJogadores.stream().anyMatch(jogador -> jogador.idTime.equals(idTime))) {
-            for (Jogador jogador : arrayJogadores) {
-                if (jogador.capitao) {
-                    idCapitao = jogador.id;
-                }
-            }
-        } else {
-            throw new TimeNaoEncontradoException();
-        }
-        return idCapitao;
+        if (!times.verificaTimeExiste(idTime)) throw new TimeNaoEncontradoException();
+        return jogadores.retornaCapitaoTime(idTime).getId();
     }
 
     public String buscarNomeJogador(Long idJogador) {
-        String nomeJogador = "";
-        if (arrayJogadores.stream().anyMatch(jogador -> jogador.id.equals(idJogador))) {
-            for (Jogador jogador : arrayJogadores) {
-                if (jogador.id.equals(idJogador)) nomeJogador = jogador.nome;
-            }
-        } else {
-            throw new JogadorNaoEncontradoException();
-        }
-        return nomeJogador;
+        return jogadores.retornaJogador(idJogador).getNome();
     }
 
     public String buscarNomeTime(Long idTime) {
-        String nomeTime = "";
-        if (arrayTimes.stream().anyMatch(time -> time.id.equals(idTime))) {
-            for (Time time : arrayTimes) {
-                if (time.id.equals(idTime)) nomeTime = time.nome;
-            }
-        } else {
-            throw new TimeNaoEncontradoException();
-        }
-        return nomeTime;
+        if (!times.verificaTimeExiste(idTime)) throw new TimeNaoEncontradoException();
+        return times.retornaTime(idTime).getNome();
     }
 
     public List<Long> buscarJogadoresDoTime(Long idTime) {
-        List<Long> arrayJogadoresId = new ArrayList<>();
-        if (arrayTimes.stream().anyMatch(time -> time.id.equals(idTime))) {
-            for (Jogador jogador : arrayJogadores) {
-                if (jogador.idTime.equals(idTime)) {
-                    arrayJogadoresId.add(jogador.id);
-                }
-            }
-        } else {
-            throw new TimeNaoEncontradoException();
-        }
-        return arrayJogadoresId;
+        if (!times.verificaTimeExiste(idTime)) throw new TimeNaoEncontradoException();
+        return jogadores.retornaJogadoresTime(idTime)
+                .stream().map(Jogador::getId)
+                .collect(Collectors.toList());
     }
 
     public Long buscarMelhorJogadorDoTime(Long idTime) {
-        Integer nivelHabilidadePrimeiroJogador = arrayJogadores.get(0).nivelHabilidade;
-        Long idMelhorJogador = 0L;
-        if (arrayTimes.stream().anyMatch(time -> time.id.equals(idTime))) {
-            for (Jogador jogador : arrayJogadores) {
-                if (jogador.idTime.equals(idTime) && jogador.nivelHabilidade >= nivelHabilidadePrimeiroJogador) {
-                    nivelHabilidadePrimeiroJogador = jogador.nivelHabilidade;
-                    idMelhorJogador = jogador.id;
-                }
-            }
-        } else {
-            throw new TimeNaoEncontradoException();
-        }
-        return idMelhorJogador;
+        if (!times.verificaTimeExiste(idTime)) throw new TimeNaoEncontradoException();
+        return jogadores.retornaMelhorJogador(jogadores.retornaJogadoresTime(idTime));
     }
 
     public Long buscarJogadorMaisVelho(Long idTime) {
-        LocalDate idadeJogadorInicial = arrayJogadores.get(0).dataNascimento;
-        Long idJogadorMaisVelho = 0L;
-        if (arrayTimes.stream().anyMatch(time -> time.id.equals(idTime))) {
-            for (Jogador jogador : arrayJogadores) {
-                if (jogador.idTime.equals(idTime) && jogador.dataNascimento.isBefore(idadeJogadorInicial)) {
-                    idadeJogadorInicial = jogador.dataNascimento;
-                    idJogadorMaisVelho = jogador.id;
-                } else if (jogador.id.equals(arrayJogadores.get(0).id)) {
-                    idadeJogadorInicial = jogador.dataNascimento;
-                    idJogadorMaisVelho = jogador.id;
-                }
-            }
-        } else {
-            throw new TimeNaoEncontradoException();
-        }
-        return idJogadorMaisVelho;
+        if (!times.verificaTimeExiste(idTime)) throw new TimeNaoEncontradoException();
+        return jogadores.retornaJogadorMaisVelho(jogadores.retornaJogadoresTime(idTime));
     }
 
     public List<Long> buscarTimes() {
-        List<Long> arrayTimesId = new ArrayList<>();
-        if (!arrayTimes.isEmpty()) {
-            for (Time time : arrayTimes) {
-                arrayTimesId.add(time.id);
-            }
-        } else {
-            return arrayTimesId;
-        }
-        return arrayTimesId;
+        List<Long> vazio = new ArrayList<>();
+        if (times.times.isEmpty()) return vazio;
+        return times.times.stream()
+                .map(Time::getId)
+                .collect(Collectors.toList());
     }
 
     public Long buscarJogadorMaiorSalario(Long idTime) {
-        BigDecimal salarioJogadorInicial = arrayJogadores.get(0).salario;
-        Long idJogadorMaiorSalario = 0L;
-        if (arrayTimes.stream().anyMatch(time -> time.id.equals(idTime))) {
-            for (Jogador jogador : arrayJogadores) {
-                if (jogador.idTime.equals(idTime) && jogador.salario.compareTo(salarioJogadorInicial) > 0) {
-                    salarioJogadorInicial = jogador.salario;
-                    idJogadorMaiorSalario = jogador.id;
-                }
-            }
-        } else {
-            throw new TimeNaoEncontradoException();
-        }
-        return idJogadorMaiorSalario;
+        if (!times.verificaTimeExiste(idTime)) throw new TimeNaoEncontradoException();
+        return jogadores.retornaJogadorMaiorSalario(jogadores.retornaJogadoresTime(idTime));
     }
 
     public BigDecimal buscarSalarioDoJogador(Long idJogador) {
-        BigDecimal jogadorSalario = null;
-        if (arrayJogadores.stream().anyMatch(jogador -> jogador.id.equals(idJogador))) {
-            for (Jogador jogador : arrayJogadores) {
-                if (jogador.id.equals(idJogador)) {
-                    jogadorSalario = jogador.salario;
-                }
-            }
-        } else {
-            throw new JogadorNaoEncontradoException();
-        }
-        return jogadorSalario;
+        return jogadores.retornaJogador(idJogador).getSalario();
     }
 
     public List<Long> buscarTopJogadores(Integer top) {
-        List<BigDecimal> arrayTopSalarios = new ArrayList<>();
-        List<Long> arrayTopIds = new ArrayList<>();
-        List<Long> result = new ArrayList<>();
-        if (!arrayJogadores.isEmpty()) {
-            for ( Jogador jogador : arrayJogadores ) {
-                arrayTopSalarios.add(jogador.salario);
-            }
-            Collections.sort(arrayTopSalarios, Collections.reverseOrder());
-            for ( BigDecimal bigDecimal : arrayTopSalarios ) {
-                for ( Jogador jogador : arrayJogadores ) {
-                    if (bigDecimal.equals(jogador.salario)) {
-                        arrayTopIds.add(jogador.id);
-                    }
-                }
-            }
-        } else {
-            return result;
-        }
-        for (int i = 0; i < top; i++) {
-            result.add(arrayTopIds.get(i));
-        }
-        return result;
+        List<Long> vazio = new ArrayList<>();
+        if (jogadores.jogadores.isEmpty()) return vazio;
+
+        Comparator<Jogador> comparaPorHabilidade = Comparator
+                .comparing(Jogador::getNivelHabilidade).reversed()
+                .thenComparing(Jogador::getId);
+
+        return jogadores.jogadores
+                .stream().sorted(comparaPorHabilidade)
+                .map(Jogador::getId)
+                .limit(top)
+                .collect(Collectors.toList());
     }
 
     public static void main(String[] args) {
         MeuTime metodos = new MeuTime();
-        metodos.incluirTime(1l, "Teste1", LocalDate.now(), "branco", "branco");
-        System.out.println(metodos.buscarTimes());
-        metodos.incluirJogador(2L, 1L, "ANDRE", LocalDate.now(), 10, new BigDecimal(2.0));
-        metodos.incluirJogador(3L, 2L, "ANDRE", LocalDate.now(), 10, new BigDecimal(2.0));
-//        System.out.println(metodos);
-    }
+        System.out.println(metodos.times.times);
+        System.out.println(metodos.jogadores.jogadores);
 
+        metodos.incluirTime(1l, "Time1", LocalDate.now(), "branco", "branco");
+        metodos.incluirJogador(2l, 1l, "Jogador1", LocalDate.now().minus(25, ChronoUnit.YEARS), 1, BigDecimal.TEN);
+        metodos.incluirJogador(3l, 1l, "Jogador2", LocalDate.now().minus(20, ChronoUnit.YEARS), 2, BigDecimal.TEN);
+
+        System.out.println(metodos.times.times.stream().map(Time::getNome).collect(Collectors.toList()));
+        System.out.println(metodos.jogadores.jogadores.stream().map(Jogador::getNome).collect(Collectors.toList()));
+    }
 }
