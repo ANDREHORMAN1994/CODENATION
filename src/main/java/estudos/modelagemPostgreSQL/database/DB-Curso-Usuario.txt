@@ -1,0 +1,80 @@
+// CRIANDO TABELA USUARIO
+DROP TABLE usuario;
+CREATE TABLE IF NOT EXISTS usuario (
+	id BIGSERIAL,
+	nome VARCHAR(50) NOT NULL,
+	idade INT NOT NULL,
+	cpf VARCHAR(14) UNIQUE NOT NULL,
+	login VARCHAR(50) NOT NULL,
+	PRIMARY KEY (id)
+);
+
+INSERT INTO usuario (nome, idade, cpf, login)
+VALUES ('André Horman', 26, '107.736.264-17', 'andrehormandev@gmail.com');
+
+INSERT INTO usuario (nome, idade, cpf, login)
+VALUES ('Rayane Pacote', 32, '123.123.123-12', 'rayane@gmail.com');
+
+SELECT * FROM usuario;
+
+
+// CRIANDO TABELA DISCIPLINA
+DROP TABLE disciplina;
+CREATE TABLE IF NOT EXISTS disciplina (
+	id BIGSERIAL,
+	nome VARCHAR(50) UNIQUE NOT NULL,
+	PRIMARY KEY (id)
+);
+
+INSERT INTO disciplina (nome)
+VALUES
+	('Programação'),
+	('Pericia Criminal');
+
+ALTER TABLE disciplina ADD descricao VARCHAR(100);
+ALTER TABLE disciplina ADD COLUMN id_professor BIGINT REFERENCES professor(id);
+
+UPDATE disciplina
+SET descricao = 'Aprendendo Java',
+WHERE id = 2;
+
+UPDATE disciplina
+SET descricao = 'Aprendendo Pericia'
+WHERE id = 3;
+
+SELECT * FROM disciplina;
+
+
+// CRIANDO TABELA PROFESSOR
+DROP TABLE professor;
+CREATE TABLE IF NOT EXISTS professor (
+	id BIGSERIAL,
+	id_usuario BIGINT UNIQUE NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (id_usuario) REFERENCES usuario(id)
+);
+
+SELECT * FROM professor;
+
+
+// CRIANDO TABELA ALUNO
+DROP TABLE aluno;
+CREATE TABLE IF NOT EXISTS aluno (
+	id BIGSERIAL,
+	id_usuario BIGINT UNIQUE NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (id_usuario) REFERENCES usuario(id)
+);
+
+SELECT * FROM aluno;
+
+
+// CRIANDO TABELA ALUNO_DISCIPLINA
+DROP TABLE aluno_disciplina;
+CREATE TABLE aluno_disciplina (
+	id_aluno BIGSERIAL,
+	id_disciplina BIGSERIAL,
+	FOREIGN KEY (id_aluno) REFERENCES aluno(id),
+	FOREIGN KEY (id_disciplina) REFERENCES disciplina(id)
+);
+
